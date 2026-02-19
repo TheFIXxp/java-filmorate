@@ -45,7 +45,7 @@ public class FilmService {
         return film;
     }
 
-    private static void validateDate(Film film) {
+    private void validateDate(Film film) {
         if (film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
             log.warn(
                     "Film validation failed: releaseDate={} is before {}",
@@ -57,6 +57,7 @@ public class FilmService {
     }
 
     public Collection<Film> getFilms() {
+        log.info("Get all films");
         return this.films.values();
     }
 }

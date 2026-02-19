@@ -22,9 +22,7 @@ public class UserService {
     int nextId = 1;
 
     public User addUser(User user) {
-        if (user.getName() == null || user.getName().isEmpty()) {
-            user.setName(user.getLogin());
-        }
+        applyDefaultName(user);
         user.setId(this.nextId++);
         this.users.put(user.getId(), user);
         log.info("User added: id={}, login={}", user.getId(), user.getLogin());
@@ -36,15 +34,20 @@ public class UserService {
             log.warn("User update failed: id={} not found", user.getId());
             throw new NoSuchElementException("User with id %s not found".formatted(user.getId()));
         }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
+        applyDefaultName(user);
         this.users.put(user.getId(), user);
         log.info("User updated: id={}, login={}", user.getId(), user.getLogin());
         return user;
     }
 
+    private void applyDefaultName(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+    }
+
     public Collection<User> getUsers() {
+        log.info("Get all users");
         return this.users.values();
     }
 }
