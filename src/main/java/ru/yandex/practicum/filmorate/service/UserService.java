@@ -6,11 +6,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
 
 @Slf4j
 @Service
@@ -18,26 +16,20 @@ import java.util.NoSuchElementException;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserService {
 
-    final Map<Integer, User> users = new HashMap<>();
-    int nextId = 1;
+    final UserStorage userStorage;
 
     public User addUser(User user) {
         applyDefaultName(user);
-        user.setId(this.nextId++);
-        this.users.put(user.getId(), user);
-        log.info("User added: id={}, login={}", user.getId(), user.getLogin());
-        return user;
+        User stored = this.userStorage.addUser(user);
+        log.info("User added: id={}, login={}", stored.getId(), stored.getLogin());
+        return stored;
     }
 
     public User updateUser(User user) {
-        if (!this.users.containsKey(user.getId())) {
-            log.warn("User update failed: id={} not found", user.getId());
-            throw new NoSuchElementException("User with id %s not found".formatted(user.getId()));
-        }
         applyDefaultName(user);
-        this.users.put(user.getId(), user);
-        log.info("User updated: id={}, login={}", user.getId(), user.getLogin());
-        return user;
+        User stored = this.userStorage.updateUser(user);
+        log.info("User updated: id={}, login={}", stored.getId(), stored.getLogin());
+        return stored;
     }
 
     private void applyDefaultName(User user) {
@@ -48,6 +40,31 @@ public class UserService {
 
     public Collection<User> getUsers() {
         log.info("Get all users");
-        return this.users.values();
+        return this.userStorage.getUsers();
+    }
+
+    public User getUserById(long userId) {
+        log.info("Get user by id={}", userId);
+        return this.userStorage.getUserById(userId);
+    }
+
+    public void addFriend(long userId, long friendId) {
+        this.userStorage.addFriend(userId, friendId);
+        log.info("Friend added: userId={}, friendId={}", userId, friendId);
+    }
+
+    public void removeFriend(long userId, long friendId) {
+        this.userStorage.removeFriend(userId, friendId);
+        log.info("Friend removed: userId={}, friendId={}", userId, friendId);
+    }
+
+    public Collection<User> getFriends(long userId) {
+        log.info("Get friends: userId={}", userId);
+        return this.userStorage.getFriends(userId);
+    }
+
+    public Collection<User> getCommonFriends(long userId, long otherId) {
+        log.info("Get common friends: userId={}, otherId={}", userId, otherId);
+        return this.userStorage.getCommonFriends(userId, otherId);
     }
 }

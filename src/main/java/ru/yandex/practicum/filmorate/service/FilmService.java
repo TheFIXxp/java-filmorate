@@ -7,12 +7,11 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
 
 @Slf4j
 @Service
@@ -22,27 +21,21 @@ public class FilmService {
 
     private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
 
-    final Map<Integer, Film> films = new HashMap<>();
-    int nextId = 1;
+    final FilmStorage filmStorage;
+    final UserStorage userStorage;
 
     public Film addFilm(Film film) {
         validateDate(film);
-        film.setId(this.nextId++);
-        this.films.put(film.getId(), film);
-        log.info("Film added: id={}, name={}", film.getId(), film.getName());
-        return film;
+        Film stored = this.filmStorage.addFilm(film);
+        log.info("Film added: id={}, name={}", stored.getId(), stored.getName());
+        return stored;
     }
 
     public Film updateFilm(Film film) {
-        if (!this.films.containsKey(film.getId())) {
-            log.warn("Film update failed: id={} not found", film.getId());
-            throw new NoSuchElementException("Film with id %s not found".formatted(film.getId()));
-        }
         validateDate(film);
-
-        this.films.put(film.getId(), film);
-        log.info("Film updated: id={}, name={}", film.getId(), film.getName());
-        return film;
+        Film stored = this.filmStorage.updateFilm(film);
+        log.info("Film updated: id={}, name={}", stored.getId(), stored.getName());
+        return stored;
     }
 
     private void validateDate(Film film) {
@@ -58,6 +51,28 @@ public class FilmService {
 
     public Collection<Film> getFilms() {
         log.info("Get all films");
-        return this.films.values();
+        return this.filmStorage.getFilms();
+    }
+
+    public Film getFilmById(long filmId) {
+        log.info("Get film by id={}", filmId);
+        return this.filmStorage.getFilmById(filmId);
+    }
+
+    public void addLike(long filmId, long userId) {
+        this.userStorage.getUserById(userId);
+        this.filmStorage.addLike(filmId, userId);
+        log.info("Like added: filmId={}, userId={}", filmId, userId);
+    }
+
+    public void removeLike(long filmId, long userId) {
+        this.userStorage.getUserById(userId);
+        this.filmStorage.removeLike(filmId, userId);
+        log.info("Like removed: filmId={}, userId={}", filmId, userId);
+    }
+
+    public Collection<Film> getPopular(int count) {
+        log.info("Get popular films: count={}", count);
+        return this.filmStorage.getPopular(count);
     }
 }
