@@ -23,20 +23,13 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User updateUser(User user) {
-        if (!this.users.containsKey(user.getId())) {
-            throw new NoSuchElementException("User with id %s not found".formatted(user.getId()));
-        }
         this.users.put(user.getId(), user);
         return user;
     }
 
     @Override
-    public User getUserById(long userId) {
-        User user = this.users.get(userId);
-        if (user == null) {
-            throw new NoSuchElementException("User with id %s not found".formatted(userId));
-        }
-        return user;
+    public Optional<User> getUserById(long userId) {
+        return Optional.ofNullable(this.users.get(userId));
     }
 
     @Override
@@ -46,8 +39,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public void addFriend(long userId, long friendId) {
-        ensureUserExists(userId);
-        ensureUserExists(friendId);
         this.friendsByUserId
                 .computeIfAbsent(userId, ignored -> new HashSet<>())
                 .add(friendId);
@@ -58,8 +49,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public void removeFriend(long userId, long friendId) {
-        ensureUserExists(userId);
-        ensureUserExists(friendId);
         Set<Long> userFriends = this.friendsByUserId.get(userId);
         if (userFriends != null) {
             userFriends.remove(friendId);
@@ -72,28 +61,22 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public Collection<User> getFriends(long userId) {
-        ensureUserExists(userId);
         return this.friendsByUserId.getOrDefault(userId, Collections.emptySet())
                 .stream()
-                .map(this::getUserById)
+                .map(this.users::get)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Collection<User> getCommonFriends(long userId, long otherId) {
-        ensureUserExists(userId);
-        ensureUserExists(otherId);
         Set<Long> first = this.friendsByUserId.getOrDefault(userId, Collections.emptySet());
         Set<Long> second = this.friendsByUserId.getOrDefault(otherId, Collections.emptySet());
         return first.stream()
                 .filter(second::contains)
-                .map(this::getUserById)
+                .map(this.users::get)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
-    private void ensureUserExists(long userId) {
-        if (!this.users.containsKey(userId)) {
-            throw new NoSuchElementException("User with id %s not found".formatted(userId));
-        }
-    }
 }
