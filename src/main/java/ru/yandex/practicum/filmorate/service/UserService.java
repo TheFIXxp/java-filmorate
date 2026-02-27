@@ -11,6 +11,9 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -80,7 +83,21 @@ public class UserService {
         ensureUserExists(userId);
         ensureUserExists(otherId);
         log.info("Get common friends: userId={}, otherId={}", userId, otherId);
-        return this.userStorage.getCommonFriends(userId, otherId);
+
+        Collection<User> firstFriends = this.userStorage.getFriends(userId);
+        Collection<User> secondFriends = this.userStorage.getFriends(otherId);
+
+        if (firstFriends == null || secondFriends == null) {
+            return Collections.emptyList();
+        }
+
+        Set<Long> secondFriendsIds = secondFriends.stream()
+                .map(User::getId)
+                .collect(Collectors.toSet());
+
+        return firstFriends.stream()
+                .filter(user -> secondFriendsIds.contains(user.getId()))
+                .collect(Collectors.toList());
     }
 
     private void ensureUserExists(long userId) {

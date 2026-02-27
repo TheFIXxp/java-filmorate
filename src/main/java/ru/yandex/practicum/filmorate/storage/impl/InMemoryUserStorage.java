@@ -68,15 +68,4 @@ public class InMemoryUserStorage implements UserStorage {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public Collection<User> getCommonFriends(long userId, long otherId) {
-        Set<Long> first = this.friendsByUserId.getOrDefault(userId, Collections.emptySet());
-        Set<Long> second = this.friendsByUserId.getOrDefault(otherId, Collections.emptySet());
-        return first.stream()
-                .filter(second::contains)
-                .map(this.users::get)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-    }
-
 }

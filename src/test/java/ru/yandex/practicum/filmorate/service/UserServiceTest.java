@@ -8,6 +8,8 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.impl.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.testutil.TestDataFactory;
 
+import java.util.Collection;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -78,5 +80,21 @@ class UserServiceTest {
         User added = this.userService.addUser(user);
 
         assertEquals(user.getLogin(), added.getName());
+    }
+
+    @Test
+    @DisplayName("getCommonFriends: return common friends")
+    void getCommonFriends_returnCommonFriends() {
+        User user1 = this.userStorage.addUser(TestDataFactory.createValidUser());
+        User user2 = this.userStorage.addUser(TestDataFactory.createValidUser());
+        User commonFriend = this.userStorage.addUser(TestDataFactory.createValidUser());
+
+        this.userService.addFriend(user1.getId(), commonFriend.getId());
+        this.userService.addFriend(user2.getId(), commonFriend.getId());
+
+        Collection<User> commonFriends = this.userService.getCommonFriends(user1.getId(), user2.getId());
+
+        assertEquals(1, commonFriends.size());
+        assertEquals(commonFriend.getId(), commonFriends.iterator().next().getId());
     }
 }
