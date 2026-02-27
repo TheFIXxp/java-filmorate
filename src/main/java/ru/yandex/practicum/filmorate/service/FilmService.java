@@ -6,13 +6,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -22,27 +24,23 @@ public class FilmService {
 
     private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
 
-    final Map<Integer, Film> films = new HashMap<>();
-    int nextId = 1;
+    final FilmStorage filmStorage;
+    final UserStorage userStorage;
 
     public Film addFilm(Film film) {
         validateDate(film);
-        film.setId(this.nextId++);
-        this.films.put(film.getId(), film);
-        log.info("Film added: id={}, name={}", film.getId(), film.getName());
-        return film;
+        Film stored = this.filmStorage.addFilm(film);
+        log.info("Film added: id={}, name={}", stored.getId(), stored.getName());
+        return stored;
     }
 
     public Film updateFilm(Film film) {
-        if (!this.films.containsKey(film.getId())) {
-            log.warn("Film update failed: id={} not found", film.getId());
-            throw new NoSuchElementException("Film with id %s not found".formatted(film.getId()));
-        }
         validateDate(film);
-
-        this.films.put(film.getId(), film);
-        log.info("Film updated: id={}, name={}", film.getId(), film.getName());
-        return film;
+        this.filmStorage.getFilmById(film.getId())
+                .orElseThrow(() -> new NotFoundException("Film with id %s not found".formatted(film.getId())));
+        Film stored = this.filmStorage.updateFilm(film);
+        log.info("Film updated: id={}, name={}", stored.getId(), stored.getName());
+        return stored;
     }
 
     private void validateDate(Film film) {
@@ -58,6 +56,46 @@ public class FilmService {
 
     public Collection<Film> getFilms() {
         log.info("Get all films");
-        return this.films.values();
+        return this.filmStorage.getFilms();
+    }
+
+    public Film getFilmById(long filmId) {
+        log.info("Get film by id={}", filmId);
+        return this.filmStorage.getFilmById(filmId)
+                .orElseThrow(() -> new NotFoundException("Film with id %s not found".formatted(filmId)));
+    }
+
+    public void addLike(long filmId, long userId) {
+        ensureFilmExists(filmId);
+        ensureUserExists(userId);
+        this.filmStorage.addLike(filmId, userId);
+        log.info("Like added: filmId={}, userId={}", filmId, userId);
+    }
+
+    public void removeLike(long filmId, long userId) {
+        ensureFilmExists(filmId);
+        ensureUserExists(userId);
+        this.filmStorage.removeLike(filmId, userId);
+        log.info("Like removed: filmId={}, userId={}", filmId, userId);
+    }
+
+    private void ensureFilmExists(long filmId) {
+        this.filmStorage.getFilmById(filmId)
+                .orElseThrow(() -> new NotFoundException("Film with id %s not found".formatted(filmId)));
+    }
+
+    private void ensureUserExists(long userId) {
+        this.userStorage.getUserById(userId)
+                .orElseThrow(() -> new NotFoundException("User with id %s not found".formatted(userId)));
+    }
+
+    public Collection<Film> getPopular(int count) {
+        log.info("Get popular films: count={}", count);
+        return this.filmStorage.getFilms().stream()
+                .sorted(Comparator.comparingInt((Film film) -> this.filmStorage.getLikesCount(film.getId()))
+                                .reversed()
+                                .thenComparingLong(Film::getId))
+                .limit(count)
+                .collect(Collectors.toList());
     }
 }
