@@ -13,8 +13,6 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -26,18 +24,23 @@ public class FilmService {
 
     final FilmStorage filmStorage;
     final UserStorage userStorage;
+    final MpaService mpaService;
+    final GenreService genreService;
 
     public Film addFilm(Film film) {
         validateDate(film);
+        validateMpa(film);
+        validateGenres(film);
         Film stored = this.filmStorage.addFilm(film);
         log.info("Film added: id={}, name={}", stored.getId(), stored.getName());
         return stored;
     }
 
     public Film updateFilm(Film film) {
+        ensureFilmExists(film.getId());
         validateDate(film);
-        this.filmStorage.getFilmById(film.getId())
-                .orElseThrow(() -> new NotFoundException("Film with id %s not found".formatted(film.getId())));
+        validateMpa(film);
+        validateGenres(film);
         Film stored = this.filmStorage.updateFilm(film);
         log.info("Film updated: id={}, name={}", stored.getId(), stored.getName());
         return stored;
@@ -51,6 +54,20 @@ public class FilmService {
                     MIN_RELEASE_DATE
             );
             throw new ValidationException("Release date cannot be before %s".formatted(MIN_RELEASE_DATE));
+        }
+    }
+
+    private void validateMpa(Film film) {
+        if (film.getMpa() != null) {
+            this.mpaService.getMpa(film.getMpa().getId());
+        }
+    }
+
+    private void validateGenres(Film film) {
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            for (var genre : film.getGenres()) {
+                this.genreService.getGenre(genre.getId());
+            }
         }
     }
 
@@ -91,11 +108,6 @@ public class FilmService {
 
     public Collection<Film> getPopular(int count) {
         log.info("Get popular films: count={}", count);
-        return this.filmStorage.getFilms().stream()
-                .sorted(Comparator.comparingInt((Film film) -> this.filmStorage.getLikesCount(film.getId()))
-                                .reversed()
-                                .thenComparingLong(Film::getId))
-                .limit(count)
-                .collect(Collectors.toList());
+        return this.filmStorage.getPopularFilms(count);
     }
 }

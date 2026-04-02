@@ -31,9 +31,8 @@ public class UserService {
     }
 
     public User updateUser(User user) {
+        ensureUserExists(user.getId());
         applyDefaultName(user);
-        this.userStorage.getUserById(user.getId())
-                .orElseThrow(() -> new NotFoundException("User with id %s not found".formatted(user.getId())));
         User stored = this.userStorage.updateUser(user);
         log.info("User updated: id={}, login={}", stored.getId(), stored.getLogin());
         return stored;

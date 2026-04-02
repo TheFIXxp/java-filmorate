@@ -28,6 +28,16 @@ public class TestConstants {
     public static final String USER_NAME = "Name";
     public static final LocalDate USER_BIRTHDAY = LocalDate.of(1990, 1, 1);
 
+    public static final String USER_EMAIL_2 = "user2@example.com";
+    public static final String USER_LOGIN_2 = "login2";
+    public static final String USER_NAME_2 = "Name2";
+    public static final LocalDate USER_BIRTHDAY_2 = LocalDate.of(1995, 6, 15);
+
+    public static final String USER_EMAIL_3 = "user3@example.com";
+    public static final String USER_LOGIN_3 = "login3";
+    public static final String USER_NAME_3 = "Name3";
+    public static final LocalDate USER_BIRTHDAY_3 = LocalDate.of(1992, 3, 20);
+
     public static final String USER_EMAIL_PROPERTY = "email";
     public static final String USER_LOGIN_PROPERTY = "login";
     public static final String USER_BIRTHDAY_PROPERTY = "birthday";

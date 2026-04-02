@@ -24,4 +24,22 @@ public class TestDataFactory {
         user.setBirthday(TestConstants.USER_BIRTHDAY);
         return user;
     }
+
+    public static User createValidUser2() {
+        User user = new User();
+        user.setEmail(TestConstants.USER_EMAIL_2);
+        user.setLogin(TestConstants.USER_LOGIN_2);
+        user.setName(TestConstants.USER_NAME_2);
+        user.setBirthday(TestConstants.USER_BIRTHDAY_2);
+        return user;
+    }
+
+    public static User createValidUser3() {
+        User user = new User();
+        user.setEmail(TestConstants.USER_EMAIL_3);
+        user.setLogin(TestConstants.USER_LOGIN_3);
+        user.setName(TestConstants.USER_NAME_3);
+        user.setBirthday(TestConstants.USER_BIRTHDAY_3);
+        return user;
+    }
 }
