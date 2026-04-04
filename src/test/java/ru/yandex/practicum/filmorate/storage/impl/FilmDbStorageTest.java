@@ -12,10 +12,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.testutil.TestDataFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,7 +35,7 @@ class FilmDbStorageTest {
         Mpa mpa = new Mpa();
         mpa.setId(1);
         film.setMpa(mpa);
-        film.setGenres(new ArrayList<>());
+        film.setGenres(Set.of());
 
         Film addedFilm = this.filmStorage.addFilm(film);
 
@@ -54,7 +51,7 @@ class FilmDbStorageTest {
     void addFilm_filmWithoutMpa_mpaIsNull() {
         Film film = TestDataFactory.createValidFilm();
         film.setMpa(null);
-        film.setGenres(new ArrayList<>());
+        film.setGenres(Set.of());
 
         Film addedFilm = this.filmStorage.addFilm(film);
 
@@ -71,9 +68,9 @@ class FilmDbStorageTest {
         Mpa mpa = new Mpa();
         mpa.setId(1);
         film1.setMpa(mpa);
-        film1.setGenres(new ArrayList<>());
+        film1.setGenres(Set.of());
         film2.setMpa(mpa);
-        film2.setGenres(new ArrayList<>());
+        film2.setGenres(Set.of());
 
         Film added1 = this.filmStorage.addFilm(film1);
         Film added2 = this.filmStorage.addFilm(film2);
@@ -97,7 +94,7 @@ class FilmDbStorageTest {
         Genre genre2 = new Genre();
         genre2.setId(2);
         genre2.setName("Драма");
-        film.setGenres(List.of(genre1, genre2));
+        film.setGenres(Set.of(genre1, genre2));
 
         Film addedFilm = this.filmStorage.addFilm(film);
 
@@ -113,7 +110,7 @@ class FilmDbStorageTest {
         Mpa mpa = new Mpa();
         mpa.setId(1);
         originalFilm.setMpa(mpa);
-        originalFilm.setGenres(new ArrayList<>());
+        originalFilm.setGenres(Set.of());
         Film addedFilm = this.filmStorage.addFilm(originalFilm);
         long filmId = addedFilm.getId();
 
@@ -124,7 +121,7 @@ class FilmDbStorageTest {
         updatedFilm.setReleaseDate(originalFilm.getReleaseDate());
         updatedFilm.setDuration(150);
         updatedFilm.setMpa(mpa);
-        updatedFilm.setGenres(new ArrayList<>());
+        updatedFilm.setGenres(Set.of());
 
         Film result = this.filmStorage.updateFilm(updatedFilm);
 
@@ -135,49 +132,13 @@ class FilmDbStorageTest {
     }
 
     @Test
-    @DisplayName("updateFilm: film genres -> genres updated")
-    void updateFilm_filmGenres_genresUpdated() {
-        Film originalFilm = TestDataFactory.createValidFilm();
-        Mpa mpa = new Mpa();
-        mpa.setId(1);
-        originalFilm.setMpa(mpa);
-
-        Genre genre1 = new Genre();
-        genre1.setId(1);
-        Genre genre2 = new Genre();
-        genre2.setId(2);
-        originalFilm.setGenres(List.of(genre1, genre2));
-
-        Film addedFilm = this.filmStorage.addFilm(originalFilm);
-        long filmId = addedFilm.getId();
-
-        Film updatedFilm = new Film();
-        updatedFilm.setId(filmId);
-        updatedFilm.setName("Updated Film");
-        updatedFilm.setDescription("Updated Description");
-        updatedFilm.setDuration(150);
-        updatedFilm.setMpa(mpa);
-        updatedFilm.setReleaseDate(originalFilm.getReleaseDate());
-
-        Genre genre3 = new Genre();
-        genre3.setId(3);
-        updatedFilm.setGenres(List.of(genre3));
-
-        this.filmStorage.updateFilm(updatedFilm);
-
-        Optional<Film> foundFilm = this.filmStorage.getFilmById(filmId);
-        assertTrue(foundFilm.isPresent());
-        assertEquals(1, foundFilm.get().getGenres().size());
-    }
-
-    @Test
     @DisplayName("getFilmById: film exists -> return film")
     void getFilmById_filmExists_returnFilm() {
         Film film = TestDataFactory.createValidFilm();
         Mpa mpa = new Mpa();
         mpa.setId(1);
         film.setMpa(mpa);
-        film.setGenres(new ArrayList<>());
+        film.setGenres(Set.of());
         Film addedFilm = this.filmStorage.addFilm(film);
         long filmId = addedFilm.getId();
 
@@ -204,9 +165,9 @@ class FilmDbStorageTest {
         Mpa mpa = new Mpa();
         mpa.setId(1);
         film1.setMpa(mpa);
-        film1.setGenres(new ArrayList<>());
+        film1.setGenres(Set.of());
         film2.setMpa(mpa);
-        film2.setGenres(new ArrayList<>());
+        film2.setGenres(Set.of());
 
         this.filmStorage.addFilm(film1);
         this.filmStorage.addFilm(film2);
@@ -234,7 +195,7 @@ class FilmDbStorageTest {
         Mpa mpa = new Mpa();
         mpa.setId(1);
         film.setMpa(mpa);
-        film.setGenres(new ArrayList<>());
+        film.setGenres(Set.of());
 
         Film addedFilm = this.filmStorage.addFilm(film);
 

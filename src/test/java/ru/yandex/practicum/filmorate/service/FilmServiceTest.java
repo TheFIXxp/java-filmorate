@@ -16,7 +16,7 @@ import ru.yandex.practicum.filmorate.storage.impl.UserDbStorage;
 import ru.yandex.practicum.filmorate.testutil.TestDataFactory;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,7 +41,7 @@ class FilmServiceTest {
         Mpa mpa = new Mpa();
         mpa.setId(1);
         film.setMpa(mpa);
-        film.setGenres(new ArrayList<>());
+        film.setGenres(new HashSet<>());
         return film;
     }
 

@@ -8,11 +8,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -24,6 +30,7 @@ public class FilmService {
 
     final FilmStorage filmStorage;
     final UserStorage userStorage;
+    final GenreStorage genreStorage;
     final MpaService mpaService;
     final GenreService genreService;
 
@@ -43,7 +50,7 @@ public class FilmService {
         validateGenres(film);
         Film stored = this.filmStorage.updateFilm(film);
         log.info("Film updated: id={}, name={}", stored.getId(), stored.getName());
-        return stored;
+        return film;
     }
 
     private void validateDate(Film film) {
@@ -58,28 +65,39 @@ public class FilmService {
     }
 
     private void validateMpa(Film film) {
-        if (film.getMpa() != null) {
-            this.mpaService.getMpa(film.getMpa().getId());
+        if (film.getMpa() == null) {
+            log.warn("Film validation failed: MPA is required");
+            throw new ValidationException("MPA is required");
         }
+        this.mpaService.getMpa(film.getMpa().getId());
     }
 
     private void validateGenres(Film film) {
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            for (var genre : film.getGenres()) {
-                this.genreService.getGenre(genre.getId());
-            }
+            Collection<Integer> genreIds = film.getGenres().stream()
+                    .map(Genre::getId)
+                    .collect(Collectors.toList());
+
+            this.genreService.getGenres(genreIds);
         }
     }
 
     public Collection<Film> getFilms() {
         log.info("Get all films");
-        return this.filmStorage.getFilms();
+        Collection<Film> films = this.filmStorage.getFilms();
+        enrichFilmsWithGenres(films);
+        return films;
     }
 
     public Film getFilmById(long filmId) {
         log.info("Get film by id={}", filmId);
-        return this.filmStorage.getFilmById(filmId)
+        Film film = this.filmStorage.getFilmById(filmId)
                 .orElseThrow(() -> new NotFoundException("Film with id %s not found".formatted(filmId)));
+
+        Map<Long, Set<Genre>> longSetMap = this.genreStorage.getGenresForFilms(List.of(filmId));
+        film.setGenres(longSetMap.getOrDefault(filmId, Set.of()));
+
+        return film;
     }
 
     public void addLike(long filmId, long userId) {
@@ -108,6 +126,24 @@ public class FilmService {
 
     public Collection<Film> getPopular(int count) {
         log.info("Get popular films: count={}", count);
-        return this.filmStorage.getPopularFilms(count);
+        Collection<Film> films = this.filmStorage.getPopularFilms(count);
+        enrichFilmsWithGenres(films);
+        return films;
+    }
+
+    private void enrichFilmsWithGenres(Collection<Film> films) {
+        if (films.isEmpty()) {
+            return;
+        }
+
+        Collection<Long> filmIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toList());
+
+        Map<Long, Set<Genre>> genresByFilmId = this.genreStorage.getGenresForFilms(filmIds);
+
+        for (Film film : films) {
+            film.setGenres(genresByFilmId.getOrDefault(film.getId(), Set.of()));
+        }
     }
 }

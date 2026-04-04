@@ -36,6 +36,8 @@ public class UserDbStorage implements UserStorage {
 
     private static final String SELECT_FRIENDS = "SELECT u.id, u.email, u.login, u.name, u.birthday " + "FROM users u " + "INNER JOIN friendships f ON u.id = f.friend_id " + "WHERE f.user_id = ?";
 
+    private static final String SELECT_COMMON_FRIENDS = "SELECT u.id, u.email, u.login, u.name, u.birthday " + "FROM users u " + "INNER JOIN friendships f1 ON u.id = f1.friend_id " + "INNER JOIN friendships f2 ON u.id = f2.friend_id " + "WHERE f1.user_id = ? AND f2.user_id = ?";
+
     private final JdbcTemplate jdbcTemplate;
     private final UserRowMapper userRowMapper;
 
@@ -64,7 +66,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Optional<User> getUserById(long userId) {
-        return this.jdbcTemplate.query(SELECT_USER_BY_ID, this.userRowMapper::mapRow, userId).stream().findFirst();
+        return this.jdbcTemplate.query(SELECT_USER_BY_ID, this.userRowMapper, userId).stream().findFirst();
     }
 
     @Override
@@ -88,6 +90,11 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Collection<User> getFriends(long userId) {
-        return this.jdbcTemplate.query(SELECT_FRIENDS, this.userRowMapper::mapRow, userId);
+        return this.jdbcTemplate.query(SELECT_FRIENDS, this.userRowMapper, userId);
+    }
+
+    @Override
+    public Collection<User> getCommonFriends(long userId, long otherId) {
+        return this.jdbcTemplate.query(SELECT_COMMON_FRIENDS, this.userRowMapper, userId, otherId);
     }
 }

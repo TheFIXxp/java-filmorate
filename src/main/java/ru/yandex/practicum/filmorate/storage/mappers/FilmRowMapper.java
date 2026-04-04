@@ -6,7 +6,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.Set;
 
 @Component
 public class FilmRowMapper implements RowMapper<Film> {
@@ -18,7 +18,7 @@ public class FilmRowMapper implements RowMapper<Film> {
         film.setDescription(rs.getString("description"));
         film.setReleaseDate(rs.getDate("release_date").toLocalDate());
         film.setDuration(rs.getInt("duration"));
-        film.setGenres(new ArrayList<>());
+        film.setGenres(Set.of());
         return film;
     }
 }

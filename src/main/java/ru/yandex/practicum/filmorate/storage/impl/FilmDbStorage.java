@@ -7,11 +7,9 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
-import ru.yandex.practicum.filmorate.storage.mappers.GenreRowMapper;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -20,6 +18,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -48,11 +47,8 @@ public class FilmDbStorage implements FilmStorage {
 
     private static final String SELECT_LIKE_COUNT = "SELECT COUNT(*) FROM film_likes WHERE film_id = ?";
 
-    private static final String SELECT_GENRES_FOR_FILM = "SELECT g.id, g.name FROM genres g " + "INNER JOIN film_genres fg ON g.id = fg.genre_id " + "WHERE fg.film_id = ? " + "ORDER BY g.id";
-
     private final JdbcTemplate jdbcTemplate;
     private final FilmRowMapper filmRowMapper;
-    private final GenreRowMapper genreRowMapper;
 
     @Override
     public Film addFilm(Film film) {
@@ -91,35 +87,25 @@ public class FilmDbStorage implements FilmStorage {
             addGenresToFilm(film);
         }
 
-        loadGenresForFilm(film);
-
         return film;
     }
 
     @Override
     public Optional<Film> getFilmById(long filmId) {
-        Optional<Film> film = this.jdbcTemplate.query(SELECT_FILM_WITH_MPA_BY_ID, (rs, rowNum) -> {
+        return this.jdbcTemplate.query(SELECT_FILM_WITH_MPA_BY_ID, (rs, rowNum) -> {
             Film f = this.filmRowMapper.mapRow(rs, rowNum);
             loadMpaFromResultSet(rs, f);
             return f;
         }, filmId).stream().findFirst();
-
-        film.ifPresent(this::loadGenresForFilm);
-
-        return film;
     }
 
     @Override
     public Collection<Film> getFilms() {
-        List<Film> films = this.jdbcTemplate.query(SELECT_ALL_FILMS_WITH_MPA, (rs, rowNum) -> {
+        return this.jdbcTemplate.query(SELECT_ALL_FILMS_WITH_MPA, (rs, rowNum) -> {
             Film f = this.filmRowMapper.mapRow(rs, rowNum);
             loadMpaFromResultSet(rs, f);
             return f;
         });
-
-        films.forEach(this::loadGenresForFilm);
-
-        return films;
     }
 
     @Override
@@ -139,15 +125,11 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Collection<Film> getPopularFilms(int count) {
-        List<Film> films = this.jdbcTemplate.query(SELECT_POPULAR_FILMS_WITH_MPA, (rs, rowNum) -> {
+        return this.jdbcTemplate.query(SELECT_POPULAR_FILMS_WITH_MPA, (rs, rowNum) -> {
             Film f = this.filmRowMapper.mapRow(rs, rowNum);
             loadMpaFromResultSet(rs, f);
             return f;
         }, count);
-
-        films.forEach(this::loadGenresForFilm);
-
-        return films;
     }
 
     private void loadMpaFromResultSet(java.sql.ResultSet rs, Film film) throws java.sql.SQLException {
@@ -160,14 +142,12 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private void addGenresToFilm(Film film) {
-        for (Genre genre : film.getGenres()) {
-            this.jdbcTemplate.update(INSERT_FILM_GENRE, film.getId(), genre.getId());
-        }
+        List<Object[]> batchArgs = film.getGenres().stream()
+                .map(genre -> new Object[]{film.getId(), genre.getId()})
+                .collect(Collectors.toList());
+
+        this.jdbcTemplate.batchUpdate(INSERT_FILM_GENRE, batchArgs);
     }
 
-    private void loadGenresForFilm(Film film) {
-        List<Genre> genres = this.jdbcTemplate.query(SELECT_GENRES_FOR_FILM, this.genreRowMapper, film.getId());
-        film.setGenres(genres);
-    }
 
 }

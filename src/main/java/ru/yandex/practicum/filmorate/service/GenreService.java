@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
 import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -23,8 +24,20 @@ public class GenreService {
     }
 
     public Genre getGenre(int id) {
+        log.info("Get: Genre with id {}", id);
         return this.genreStorage.getGenreById(id)
                 .orElseThrow(() -> new NotFoundException("Genre with id %s not found".formatted(id)));
     }
 
+    public List<Genre> getGenres(Collection<Integer> genreIds) {
+        log.info("Get: Genres with ids {}", genreIds);
+        List<Genre> genres = this.genreStorage.getGenresByIds(genreIds);
+
+        if (genres.size() != genreIds.size()) {
+            log.warn("One or more genres not found");
+            throw new NotFoundException("One or more genres not found");
+        }
+
+        return genres;
+    }
 }
