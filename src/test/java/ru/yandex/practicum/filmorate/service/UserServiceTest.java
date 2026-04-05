@@ -1,11 +1,14 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.impl.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.impl.UserDbStorage;
 import ru.yandex.practicum.filmorate.testutil.TestDataFactory;
 
 import java.util.Collection;
@@ -13,16 +16,16 @@ import java.util.Collection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@SpringBootTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class UserServiceTest {
 
+    @Autowired
     private UserService userService;
-    private InMemoryUserStorage userStorage;
 
-    @BeforeEach
-    void setUp() {
-        this.userStorage = new InMemoryUserStorage();
-        this.userService = new UserService(this.userStorage);
-    }
+    @Autowired
+    private UserDbStorage userStorage;
 
     @Test
     @DisplayName("getUserById: user does not exist -> throw NotFoundException")
@@ -86,8 +89,8 @@ class UserServiceTest {
     @DisplayName("getCommonFriends: return common friends")
     void getCommonFriends_returnCommonFriends() {
         User user1 = this.userStorage.addUser(TestDataFactory.createValidUser());
-        User user2 = this.userStorage.addUser(TestDataFactory.createValidUser());
-        User commonFriend = this.userStorage.addUser(TestDataFactory.createValidUser());
+        User user2 = this.userStorage.addUser(TestDataFactory.createValidUser2());
+        User commonFriend = this.userStorage.addUser(TestDataFactory.createValidUser3());
 
         this.userService.addFriend(user1.getId(), commonFriend.getId());
         this.userService.addFriend(user2.getId(), commonFriend.getId());

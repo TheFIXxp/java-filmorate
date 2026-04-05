@@ -11,9 +11,6 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -31,9 +28,8 @@ public class UserService {
     }
 
     public User updateUser(User user) {
+        ensureUserExists(user.getId());
         applyDefaultName(user);
-        this.userStorage.getUserById(user.getId())
-                .orElseThrow(() -> new NotFoundException("User with id %s not found".formatted(user.getId())));
         User stored = this.userStorage.updateUser(user);
         log.info("User updated: id={}, login={}", stored.getId(), stored.getLogin());
         return stored;
@@ -84,20 +80,7 @@ public class UserService {
         ensureUserExists(otherId);
         log.info("Get common friends: userId={}, otherId={}", userId, otherId);
 
-        Collection<User> firstFriends = this.userStorage.getFriends(userId);
-        Collection<User> secondFriends = this.userStorage.getFriends(otherId);
-
-        if (firstFriends == null || secondFriends == null) {
-            return Collections.emptyList();
-        }
-
-        Set<Long> secondFriendsIds = secondFriends.stream()
-                .map(User::getId)
-                .collect(Collectors.toSet());
-
-        return firstFriends.stream()
-                .filter(user -> secondFriendsIds.contains(user.getId()))
-                .collect(Collectors.toList());
+        return this.userStorage.getCommonFriends(userId, otherId);
     }
 
     private void ensureUserExists(long userId) {

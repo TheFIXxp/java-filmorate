@@ -7,6 +7,7 @@ import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 /**
  * Film.
@@ -22,4 +23,6 @@ public class Film {
     LocalDate releaseDate;
     @Positive
     int duration;
+    Mpa mpa;
+    Set<Genre> genres;
 }
