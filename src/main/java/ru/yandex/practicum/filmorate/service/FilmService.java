@@ -146,4 +146,17 @@ public class FilmService {
             film.setGenres(genresByFilmId.getOrDefault(film.getId(), Set.of()));
         }
     }
+
+    public Collection<Film> getCommon(long userId, long friendId) {
+        ensureUserExists(userId);
+        ensureUserExists(friendId);
+
+        log.info("Get common films: userId={}, friendId={}", userId, friendId);
+
+        Collection<Film> commonFilms = this.filmStorage.getCommonFilms(userId, friendId);
+
+        enrichFilmsWithGenres(commonFilms);
+
+        return commonFilms;
+    }
 }
