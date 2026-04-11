@@ -93,4 +93,10 @@ public class UserService {
             throw new ValidationException("userId и otherId должны ссылаться на разных пользователей");
         }
     }
+
+    public void deleteUser(long id) {
+        ensureUserExists(id);
+        userStorage.deleteUser(id);
+        log.info("User deleted: id={}", id);
+    }
 }

@@ -33,6 +33,8 @@ public class FilmDbStorage implements FilmStorage {
 
     private static final String UPDATE_FILM = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE id = ?";
 
+    private static final String DELETE_FILM = "DELETE FROM films WHERE id = ?";
+
     private static final String DELETE_FILM_GENRES = "DELETE FROM film_genres WHERE film_id = ?";
 
     private static final String DELETE_FILM_LIKE = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
@@ -88,6 +90,11 @@ public class FilmDbStorage implements FilmStorage {
         }
 
         return film;
+    }
+
+    @Override
+    public void deleteFilm(long id) {
+        jdbcTemplate.update(DELETE_FILM, id);
     }
 
     @Override

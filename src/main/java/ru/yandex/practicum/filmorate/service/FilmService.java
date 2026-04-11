@@ -53,6 +53,11 @@ public class FilmService {
         return film;
     }
 
+    public void deleteFilm(long id) {
+        ensureFilmExists(id);
+        filmStorage.deleteFilm(id);
+    }
+
     private void validateDate(Film film) {
         if (film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
             log.warn(
