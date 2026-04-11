@@ -132,6 +132,45 @@ public class FilmDbStorage implements FilmStorage {
         }, count);
     }
 
+    @Override
+    public Collection<Film> getPopularFilms(int count, Integer genreId, Integer year) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
+                        "f.mpa_id, m.id as mpa_id_from_join, m.name as mpa_name " +
+                        "FROM films f " +
+                        "LEFT JOIN mpa m ON f.mpa_id = m.id " +
+                        "LEFT JOIN film_likes fl ON f.id = fl.film_id "
+        );
+
+        if (genreId != null) {
+            sql.append("JOIN film_genres fg ON f.id = fg.film_id ");
+        }
+
+        sql.append("WHERE 1=1 ");
+
+        if (genreId != null) {
+            sql.append("AND fg.genre_id = ? ");
+        }
+        if (year != null) {
+            sql.append("AND YEAR(f.release_date) = ? ");
+        }
+
+        sql.append("GROUP BY f.id, m.id, m.name ")
+                .append("ORDER BY COUNT(fl.user_id) DESC, f.id ASC ")
+                .append("LIMIT ?");
+
+        List<Object> params = new java.util.ArrayList<>();
+        if (genreId != null) params.add(genreId);
+        if (year != null) params.add(year);
+        params.add(count);
+
+        return this.jdbcTemplate.query(sql.toString(), (rs, rowNum) -> {
+            Film f = this.filmRowMapper.mapRow(rs, rowNum);
+            loadMpaFromResultSet(rs, f);
+            return f;
+        }, params.toArray());
+    }
+
     private void loadMpaFromResultSet(java.sql.ResultSet rs, Film film) throws java.sql.SQLException {
         if (rs.getObject("mpa_id_from_join") != null) {
             Mpa mpa = new Mpa();
