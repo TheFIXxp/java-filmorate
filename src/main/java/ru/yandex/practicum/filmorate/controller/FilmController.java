@@ -51,4 +51,12 @@ public class FilmController {
     public Iterable<Film> getPopular(@Valid @RequestParam(defaultValue = "10") @Positive int count) {
         return this.filmService.getPopular(count);
     }
+
+    @GetMapping("/director/{directorId}")
+    public Iterable<Film> getFilmsByDirector(
+            @PathVariable Long directorId,
+            @RequestParam(defaultValue = "likes") String sortBy
+    ) {
+        return filmService.getFilmsByDirector(directorId, sortBy);
+    }
 }

@@ -7,8 +7,10 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -33,6 +35,8 @@ public class FilmService {
     final GenreStorage genreStorage;
     final MpaService mpaService;
     final GenreService genreService;
+    final DirectorStorage directorStorage;
+    final DirectorService directorService;
 
     public Film addFilm(Film film) {
         validateDate(film);
@@ -94,8 +98,10 @@ public class FilmService {
         Film film = this.filmStorage.getFilmById(filmId)
                 .orElseThrow(() -> new NotFoundException("Film with id %s not found".formatted(filmId)));
 
-        Map<Long, Set<Genre>> longSetMap = this.genreStorage.getGenresForFilms(List.of(filmId));
-        film.setGenres(longSetMap.getOrDefault(filmId, Set.of()));
+        Map<Long, Set<Genre>> genresMap = this.genreStorage.getGenresForFilms(List.of(filmId));
+        Map<Long, Set<Director>> directorsMap = this.directorStorage.getDirectorsForFilms(List.of(filmId));
+        film.setGenres(genresMap.getOrDefault(filmId, Set.of()));
+        film.setDirectors(directorsMap.getOrDefault(filmId, Set.of()));
 
         return film;
     }
@@ -131,10 +137,17 @@ public class FilmService {
         return films;
     }
 
+    public Collection<Film> getFilmsByDirector(Long directorId, String sortBy) {
+        directorService.getDirectorById(directorId);
+        Collection<Film> films = filmStorage.getFilmsByDirector(directorId, sortBy);
+        enrichFilmsWithGenres(films);
+        enrichFilmsWithDirectors(films);
+
+        return films;
+    }
+
     private void enrichFilmsWithGenres(Collection<Film> films) {
-        if (films.isEmpty()) {
-            return;
-        }
+        if (films.isEmpty()) return;
 
         Collection<Long> filmIds = films.stream()
                 .map(Film::getId)
@@ -142,8 +155,18 @@ public class FilmService {
 
         Map<Long, Set<Genre>> genresByFilmId = this.genreStorage.getGenresForFilms(filmIds);
 
-        for (Film film : films) {
-            film.setGenres(genresByFilmId.getOrDefault(film.getId(), Set.of()));
-        }
+        films.forEach(film -> film.setGenres(genresByFilmId.getOrDefault(film.getId(), Set.of())));
+    }
+
+    private void enrichFilmsWithDirectors(Collection<Film> films) {
+        if (films.isEmpty()) return;
+
+        Collection<Long> filmIds = films.stream()
+                .map(Film::getId)
+                .collect(Collectors.toList());
+
+        Map<Long, Set<Director>> directorsByFilmId = directorStorage.getDirectorsForFilms(filmIds);
+
+        films.forEach(film -> film.setDirectors(directorsByFilmId.getOrDefault(film.getId(), Set.of())));
     }
 }
