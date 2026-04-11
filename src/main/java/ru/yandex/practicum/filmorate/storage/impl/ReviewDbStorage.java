@@ -97,13 +97,13 @@ public class ReviewDbStorage implements ReviewStorage {
         String currentRating = null;
         try {
             currentRating = jdbcTemplate.queryForObject(currentRatingSql, String.class, reviewId, userId);
-        } catch (EmptyResultDataAccessException ignored) {}
+        } catch (EmptyResultDataAccessException ignored) {
+        }
 
         if ("LIKE".equals(currentRating)) {
             log.debug("User {} already liked review {}, skipping", userId, reviewId);
             return;
-        }
-        else if ("DISLIKE".equals(currentRating)) {
+        } else if ("DISLIKE".equals(currentRating)) {
             log.debug("User {} had dislike on review {}, converting to like", userId, reviewId);
             removeDislike(reviewId, userId);
         }
@@ -124,7 +124,8 @@ public class ReviewDbStorage implements ReviewStorage {
         String currentRating = null;
         try {
             currentRating = jdbcTemplate.queryForObject(currentRatingSql, String.class, reviewId, userId);
-        } catch (EmptyResultDataAccessException ignored) {}
+        } catch (EmptyResultDataAccessException ignored) {
+        }
 
         if ("DISLIKE".equals(currentRating)) {
             log.debug("User {} already disliked review {}, skipping", userId, reviewId);
