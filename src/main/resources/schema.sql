@@ -75,3 +75,14 @@ CREATE TABLE IF NOT EXISTS review_ratings
     PRIMARY KEY (review_id, user_id),
     FOREIGN KEY (review_id) REFERENCES reviews (review_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS events
+(
+    event_id   IDENTITY PRIMARY KEY,
+    timestamp  BIGINT      NOT NULL,
+    user_id    BIGINT      NOT NULL,
+    event_type VARCHAR(50) NOT NULL,
+    operation  VARCHAR(50) NOT NULL,
+    entity_id  BIGINT      NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);

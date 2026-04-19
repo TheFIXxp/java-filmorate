@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
@@ -16,6 +17,7 @@ import ru.yandex.practicum.filmorate.storage.impl.UserDbStorage;
 import ru.yandex.practicum.filmorate.testutil.TestDataFactory;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
@@ -35,6 +37,9 @@ class FilmServiceTest {
 
     @Autowired
     private UserDbStorage userStorage;
+
+    @Autowired
+    private FeedService feedService;
 
     private Film createValidFilmWithMpa() {
         Film film = TestDataFactory.createValidFilm();
@@ -152,5 +157,60 @@ class FilmServiceTest {
     void getCommon_friendDoesNotExist_throwNotFoundException() {
         User user = this.userStorage.addUser(TestDataFactory.createValidUser());
         assertThrows(NotFoundException.class, () -> this.filmService.getCommon(user.getId(), 999L));
+    }
+
+    @Test
+    @DisplayName("addLike: should create LIKE/ADD event")
+    void addLike_shouldCreateLikeAddEvent() {
+        Film film = this.filmStorage.addFilm(createValidFilmWithMpa());
+        User user = this.userStorage.addUser(TestDataFactory.createValidUser());
+
+        this.filmService.addLike(film.getId(), user.getId());
+
+        Collection<Event> feed = this.feedService.getFeedByUserId(user.getId());
+        assertEquals(1, feed.size());
+
+        Event event = feed.iterator().next();
+        assertEquals(user.getId(), event.getUserId());
+        assertEquals(Event.EventType.LIKE, event.getEventType());
+        assertEquals(Event.Operation.ADD, event.getOperation());
+        assertEquals(film.getId(), event.getEntityId());
+    }
+
+    @Test
+    @DisplayName("removeLike: should create LIKE/REMOVE event")
+    void removeLike_shouldCreateLikeRemoveEvent() {
+        Film film = this.filmStorage.addFilm(createValidFilmWithMpa());
+        User user = this.userStorage.addUser(TestDataFactory.createValidUser());
+        this.filmService.addLike(film.getId(), user.getId());
+
+        this.filmService.removeLike(film.getId(), user.getId());
+
+        Collection<Event> feed = this.feedService.getFeedByUserId(user.getId());
+        var events = feed.stream().toList();
+
+        assertEquals(2, events.size());
+        Event removeEvent = events.getLast();
+        assertEquals(Event.Operation.REMOVE, removeEvent.getOperation());
+        assertEquals(film.getId(), removeEvent.getEntityId());
+    }
+
+    @Test
+    @DisplayName("addLike and removeLike: should create separate events for each operation")
+    void addLikeAndRemoveLike_shouldCreateSeparateEventsForEachOperation() {
+        Film film = this.filmStorage.addFilm(createValidFilmWithMpa());
+        User user = this.userStorage.addUser(TestDataFactory.createValidUser());
+
+        this.filmService.addLike(film.getId(), user.getId());
+        this.filmService.removeLike(film.getId(), user.getId());
+        this.filmService.addLike(film.getId(), user.getId());
+
+        Collection<Event> feed = this.feedService.getFeedByUserId(user.getId());
+        assertEquals(3, feed.size());
+
+        var events = feed.stream().toList();
+        assertEquals(Event.Operation.ADD, events.get(0).getOperation());
+        assertEquals(Event.Operation.REMOVE, events.get(1).getOperation());
+        assertEquals(Event.Operation.ADD, events.get(2).getOperation());
     }
 }

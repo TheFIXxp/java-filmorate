@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -33,6 +34,7 @@ public class FilmService {
     final GenreStorage genreStorage;
     final MpaService mpaService;
     final GenreService genreService;
+    final FeedService feedService;
 
     public Film addFilm(Film film) {
         validateDate(film);
@@ -104,6 +106,7 @@ public class FilmService {
         ensureFilmExists(filmId);
         ensureUserExists(userId);
         this.filmStorage.addLike(filmId, userId);
+        this.feedService.addEvent(userId, Event.EventType.LIKE, Event.Operation.ADD, filmId);
         log.info("Like added: filmId={}, userId={}", filmId, userId);
     }
 
@@ -111,6 +114,7 @@ public class FilmService {
         ensureFilmExists(filmId);
         ensureUserExists(userId);
         this.filmStorage.removeLike(filmId, userId);
+        this.feedService.addEvent(userId, Event.EventType.LIKE, Event.Operation.REMOVE, filmId);
         log.info("Like removed: filmId={}, userId={}", filmId, userId);
     }
 
