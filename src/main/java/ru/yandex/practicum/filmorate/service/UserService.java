@@ -83,7 +83,7 @@ public class UserService {
         return this.userStorage.getCommonFriends(userId, otherId);
     }
 
-    private void ensureUserExists(long userId) {
+    public void ensureUserExists(long userId) {
         this.userStorage.getUserById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id %s not found".formatted(userId)));
     }

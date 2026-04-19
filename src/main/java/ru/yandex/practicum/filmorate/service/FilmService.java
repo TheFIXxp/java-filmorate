@@ -114,7 +114,7 @@ public class FilmService {
         log.info("Like removed: filmId={}, userId={}", filmId, userId);
     }
 
-    private void ensureFilmExists(long filmId) {
+    public void ensureFilmExists(long filmId) {
         this.filmStorage.getFilmById(filmId)
                 .orElseThrow(() -> new NotFoundException("Film with id %s not found".formatted(filmId)));
     }
