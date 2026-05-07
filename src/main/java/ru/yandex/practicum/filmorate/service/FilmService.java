@@ -120,7 +120,7 @@ public class FilmService {
         log.info("Like removed: filmId={}, userId={}", filmId, userId);
     }
 
-    private void ensureFilmExists(long filmId) {
+    public void ensureFilmExists(long filmId) {
         this.filmStorage.getFilmById(filmId)
                 .orElseThrow(() -> new NotFoundException("Film with id %s not found".formatted(filmId)));
     }
@@ -168,5 +168,18 @@ public class FilmService {
         Map<Long, Set<Director>> directorsByFilmId = directorStorage.getDirectorsForFilms(filmIds);
 
         films.forEach(film -> film.setDirectors(directorsByFilmId.getOrDefault(film.getId(), Set.of())));
+    }
+
+    public Collection<Film> getCommon(long userId, long friendId) {
+        ensureUserExists(userId);
+        ensureUserExists(friendId);
+
+        log.info("Get common films: userId={}, friendId={}", userId, friendId);
+
+        Collection<Film> commonFilms = this.filmStorage.getCommonFilms(userId, friendId);
+
+        enrichFilmsWithGenres(commonFilms);
+
+        return commonFilms;
     }
 }
