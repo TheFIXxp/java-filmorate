@@ -28,6 +28,8 @@ public class UserDbStorage implements UserStorage {
 
     private static final String UPDATE_USER = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
 
+    private static final String DELETE_USER = "DELETE FROM users WHERE id = ?";
+
     private static final String DELETE_FRIENDSHIP = "DELETE FROM friendships WHERE user_id = ? AND friend_id = ?";
 
     private static final String SELECT_USER_BY_ID = "SELECT id, email, login, name, birthday FROM users WHERE id = ?";
@@ -62,6 +64,11 @@ public class UserDbStorage implements UserStorage {
     public User updateUser(User user) {
         this.jdbcTemplate.update(UPDATE_USER, user.getEmail(), user.getLogin(), user.getName(), Date.valueOf(user.getBirthday()), user.getId());
         return user;
+    }
+
+    @Override
+    public void deleteUser(long id) {
+        jdbcTemplate.update(DELETE_USER, id);
     }
 
     @Override
