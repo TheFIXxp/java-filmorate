@@ -131,6 +131,14 @@ public class FilmService {
         return films;
     }
 
+    public Collection<Film> getPopular(int count, Integer genreId, Integer year) {
+        log.info("Get popular films: count={}, genreId={}, year={}", count, genreId, year);
+        if (genreId != null || year != null) count = 10_000;
+        Collection<Film> films = this.filmStorage.getPopularFilms(count, genreId, year);
+        enrichFilmsWithGenres(films);
+        return films;
+    }
+
     private void enrichFilmsWithGenres(Collection<Film> films) {
         if (films.isEmpty()) {
             return;
