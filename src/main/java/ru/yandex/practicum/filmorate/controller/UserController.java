@@ -5,7 +5,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
@@ -17,6 +19,7 @@ import java.util.Collection;
 public class UserController {
 
     UserService userService;
+    FilmService filmService;
 
     @PostMapping
     public User createUser(@Valid @RequestBody User user) {
@@ -51,6 +54,11 @@ public class UserController {
     @GetMapping("/{id}/friends")
     public Collection<User> getFriends(@PathVariable long id) {
         return this.userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public Collection<Film> getRecommendations(@PathVariable long id) {
+        return this.filmService.getRecommendations(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")

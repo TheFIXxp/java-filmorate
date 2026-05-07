@@ -131,6 +131,14 @@ public class FilmService {
         return films;
     }
 
+    public Collection<Film> getRecommendations(long userId) {
+        ensureUserExists(userId);
+        log.info("Get film recommendations: userId={}", userId);
+        Collection<Film> recommendations = this.filmStorage.getRecommendations(userId);
+        enrichFilmsWithGenres(recommendations);
+        return recommendations;
+    }
+
     private void enrichFilmsWithGenres(Collection<Film> films) {
         if (films.isEmpty()) {
             return;
