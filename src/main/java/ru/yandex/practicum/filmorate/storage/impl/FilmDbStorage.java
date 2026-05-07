@@ -47,6 +47,25 @@ public class FilmDbStorage implements FilmStorage {
 
     private static final String SELECT_LIKE_COUNT = "SELECT COUNT(*) FROM film_likes WHERE film_id = ?";
 
+    private static final String INSERT_FILM_DIRECTOR = "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
+    private static final String DELETE_FILM_DIRECTORS = "DELETE FROM film_directors WHERE film_id = ?";
+
+    private static final String SELECT_BY_DIRECTOR_SORT_YEAR =
+            SELECT_FILM_WITH_MPA +
+                    " JOIN film_directors fd ON f.id = fd.film_id " +
+                    " WHERE fd.director_id = ? ORDER BY f.release_date";
+
+    private static final String SELECT_BY_DIRECTOR_SORT_LIKES =
+            "SELECT f.id, f.name, f.description, f.release_date, f.duration, f.mpa_id, " +
+                    "m.id as mpa_id_from_join, m.name as mpa_name " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa m ON f.mpa_id = m.id " +
+                    "JOIN film_directors fd ON f.id = fd.film_id " +
+                    "LEFT JOIN film_likes fl ON f.id = fl.film_id " +
+                    "WHERE fd.director_id = ? " +
+                    "GROUP BY f.id, m.id " +
+                    "ORDER BY COUNT(fl.user_id) DESC";
+
     private static final String SELECT_COMMON_FILMS = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " + "f.mpa_id, m.id as mpa_id_from_join, m.name as mpa_name " + "FROM films f " + "LEFT JOIN mpa m ON f.mpa_id = m.id " + "WHERE f.id IN (SELECT film_id FROM film_likes WHERE user_id = ?) " + "AND f.id IN (SELECT film_id FROM film_likes WHERE user_id = ?) " + "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = f.id) DESC, f.id ASC";
 
     private final JdbcTemplate jdbcTemplate;
@@ -76,6 +95,8 @@ public class FilmDbStorage implements FilmStorage {
             addGenresToFilm(film);
         }
 
+        addDirectorsToFilm(film);
+
         return film;
     }
 
@@ -88,6 +109,9 @@ public class FilmDbStorage implements FilmStorage {
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             addGenresToFilm(film);
         }
+
+        deleteDirectorsFromFilm(film.getId());
+        addDirectorsToFilm(film);
 
         return film;
     }
@@ -132,6 +156,17 @@ public class FilmDbStorage implements FilmStorage {
             loadMpaFromResultSet(rs, f);
             return f;
         }, count);
+    }
+
+    @Override
+    public Collection<Film> getFilmsByDirector(long directorId, String sortBy) {
+        String sql = sortBy.equals("year") ? SELECT_BY_DIRECTOR_SORT_YEAR : SELECT_BY_DIRECTOR_SORT_LIKES;
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Film f = this.filmRowMapper.mapRow(rs, rowNum);
+            loadMpaFromResultSet(rs, f);
+            return f;
+        }, directorId);
     }
 
     @Override
@@ -199,5 +234,19 @@ public class FilmDbStorage implements FilmStorage {
         this.jdbcTemplate.batchUpdate(INSERT_FILM_GENRE, batchArgs);
     }
 
+    private void addDirectorsToFilm(Film film) {
+        if (film.getDirectors() == null || film.getDirectors().isEmpty()) {
+            return;
+        }
 
+        List<Object[]> batchArgs = film.getDirectors().stream()
+                .map(director -> new Object[]{film.getId(), director.getId()})
+                .collect(Collectors.toList());
+
+        this.jdbcTemplate.batchUpdate(INSERT_FILM_DIRECTOR, batchArgs);
+    }
+
+    private void deleteDirectorsFromFilm(long filmId) {
+        this.jdbcTemplate.update(DELETE_FILM_DIRECTORS, filmId);
+    }
 }
