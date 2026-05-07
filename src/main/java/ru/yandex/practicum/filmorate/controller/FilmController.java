@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -15,6 +16,7 @@ import java.util.Collection;
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @RequestMapping("/films")
+@Validated
 public class FilmController {
 
     FilmService filmService;
@@ -55,5 +57,10 @@ public class FilmController {
             @RequestParam(required = false) Integer genreId,
             @RequestParam(required = false) Integer year) {
         return this.filmService.getPopular(count, genreId, year);
+    }
+
+    @GetMapping("/common")
+    public Collection<Film> getCommon(@RequestParam @Positive long userId, @RequestParam @Positive long friendId) {
+        return this.filmService.getCommon(userId, friendId);
     }
 }

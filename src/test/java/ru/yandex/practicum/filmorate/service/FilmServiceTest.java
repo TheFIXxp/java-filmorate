@@ -111,4 +111,46 @@ class FilmServiceTest {
         assertEquals(film2.getId(), popular.get(0).getId());
         assertEquals(film1.getId(), popular.get(1).getId());
     }
+
+    @Test
+    @DisplayName("getCommon: return common films of two users sorted by likes count")
+    void getCommon_returnCommonFilmsSortedByLikesCount() {
+        Film film1 = this.filmStorage.addFilm(createValidFilmWithMpa());
+        Film film2 = this.filmStorage.addFilm(createValidFilmWithMpa());
+        Film film3 = this.filmStorage.addFilm(createValidFilmWithMpa());
+
+        User user1 = this.userStorage.addUser(TestDataFactory.createValidUser());
+        User user2 = this.userStorage.addUser(TestDataFactory.createValidUser2());
+        User user3 = this.userStorage.addUser(TestDataFactory.createValidUser3());
+
+        this.filmService.addLike(film1.getId(), user1.getId());
+        this.filmService.addLike(film2.getId(), user1.getId());
+
+        this.filmService.addLike(film1.getId(), user2.getId());
+        this.filmService.addLike(film2.getId(), user2.getId());
+        this.filmService.addLike(film3.getId(), user2.getId());
+
+        this.filmService.addLike(film2.getId(), user3.getId());
+
+        List<Film> common = (List<Film>) this.filmService.getCommon(user1.getId(), user2.getId());
+
+        assertEquals(2, common.size());
+
+
+        assertEquals(film2.getId(), common.get(0).getId());
+        assertEquals(film1.getId(), common.get(1).getId());
+    }
+
+    @Test
+    @DisplayName("getCommon: user does not exist -> throw NotFoundException")
+    void getCommon_userDoesNotExist_throwNotFoundException() {
+        assertThrows(NotFoundException.class, () -> this.filmService.getCommon(999L, 1L));
+    }
+
+    @Test
+    @DisplayName("getCommon: friend does not exist -> throw NotFoundException")
+    void getCommon_friendDoesNotExist_throwNotFoundException() {
+        User user = this.userStorage.addUser(TestDataFactory.createValidUser());
+        assertThrows(NotFoundException.class, () -> this.filmService.getCommon(user.getId(), 999L));
+    }
 }
