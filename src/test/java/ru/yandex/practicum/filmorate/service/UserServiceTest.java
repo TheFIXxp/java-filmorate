@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.impl.UserDbStorage;
 import ru.yandex.practicum.filmorate.testutil.TestDataFactory;
@@ -26,6 +27,63 @@ class UserServiceTest {
 
     @Autowired
     private UserDbStorage userStorage;
+
+    @Autowired
+    private FeedService feedService;
+
+    @Test
+    @DisplayName("addFriend: should create FRIEND/ADD event")
+    void addFriend_shouldCreateFriendAddEvent() {
+        User user1 = this.userStorage.addUser(TestDataFactory.createValidUser());
+        User user2 = this.userStorage.addUser(TestDataFactory.createValidUser2());
+
+        this.userService.addFriend(user1.getId(), user2.getId());
+
+        Collection<Event> feed = this.feedService.getFeedByUserId(user1.getId());
+        assertEquals(1, feed.size());
+
+        Event event = feed.iterator().next();
+        assertEquals(user1.getId(), event.getUserId());
+        assertEquals(Event.EventType.FRIEND, event.getEventType());
+        assertEquals(Event.Operation.ADD, event.getOperation());
+        assertEquals(user2.getId(), event.getEntityId());
+    }
+
+    @Test
+    @DisplayName("removeFriend: should create FRIEND/REMOVE event")
+    void removeFriend_shouldCreateFriendRemoveEvent() {
+        User user1 = this.userStorage.addUser(TestDataFactory.createValidUser());
+        User user2 = this.userStorage.addUser(TestDataFactory.createValidUser2());
+        this.userService.addFriend(user1.getId(), user2.getId());
+        this.userService.removeFriend(user1.getId(), user2.getId());
+
+        Collection<Event> feed = this.feedService.getFeedByUserId(user1.getId());
+        var events = feed.stream().toList();
+
+        assertEquals(2, events.size());
+        Event removeEvent = events.getLast();
+        assertEquals(Event.Operation.REMOVE, removeEvent.getOperation());
+        assertEquals(user2.getId(), removeEvent.getEntityId());
+    }
+
+    @Test
+    @DisplayName("addFriend and removeFriend: should create separate events for each operation")
+    void addFriendAndRemoveFriend_shouldCreateSeparateEventsForEachOperation() {
+        User user1 = this.userStorage.addUser(TestDataFactory.createValidUser());
+        User user2 = this.userStorage.addUser(TestDataFactory.createValidUser2());
+
+        this.userService.addFriend(user1.getId(), user2.getId());
+        this.userService.addFriend(user1.getId(), user2.getId());
+        this.userService.removeFriend(user1.getId(), user2.getId());
+
+        Collection<Event> feed = this.feedService.getFeedByUserId(user1.getId());
+        assertEquals(3, feed.size());
+
+        var events = feed.stream().toList();
+        assertEquals(Event.Operation.ADD, events.get(0).getOperation());
+        assertEquals(Event.Operation.ADD, events.get(1).getOperation());
+        assertEquals(Event.Operation.REMOVE, events.get(2).getOperation());
+    }
 
     @Test
     @DisplayName("getUserById: user does not exist -> throw NotFoundException")

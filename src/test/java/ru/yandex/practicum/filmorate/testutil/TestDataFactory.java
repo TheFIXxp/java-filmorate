@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.testutil;
 
 import lombok.experimental.UtilityClass;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -42,4 +43,25 @@ public class TestDataFactory {
         user.setBirthday(TestConstants.USER_BIRTHDAY_3);
         return user;
     }
+
+    public static Event createEvent(long userId, Event.EventType eventType, Event.Operation operation, long entityId) {
+        Event event = new Event();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setUserId(userId);
+        event.setEventType(eventType);
+        event.setOperation(operation);
+        event.setEntityId(entityId);
+        return event;
+    }
+
+    public static Event createEvent(long userId, long timestamp, Event.EventType eventType, Event.Operation operation, long entityId) {
+        Event event = new Event();
+        event.setTimestamp(timestamp);
+        event.setUserId(userId);
+        event.setEventType(eventType);
+        event.setOperation(operation);
+        event.setEntityId(entityId);
+        return event;
+    }
 }
+

@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 
@@ -21,6 +22,7 @@ public class ReviewService {
     final ReviewStorage reviewStorage;
     final UserService userService;
     final FilmService filmService;
+    final FeedService feedService;
 
     @Transactional
     public Review create(Review review) {
@@ -29,6 +31,7 @@ public class ReviewService {
 
         review.setUseful(0);
         Review created = reviewStorage.create(review);
+        this.feedService.addEvent(created.getUserId(), Event.EventType.REVIEW, Event.Operation.ADD, created.getReviewId());
         log.info("Created review id={} for filmId={} by userId={}",
                 created.getReviewId(), created.getFilmId(), created.getUserId());
         return created;
@@ -66,6 +69,7 @@ public class ReviewService {
         filmService.ensureFilmExists(review.getFilmId());
 
         Review updated = reviewStorage.update(review);
+        this.feedService.addEvent(updated.getUserId(), Event.EventType.REVIEW, Event.Operation.UPDATE, updated.getReviewId());
         log.info("Updated review id={}", updated.getReviewId());
         return updated;
     }
@@ -73,7 +77,9 @@ public class ReviewService {
     @Transactional
     public void delete(long reviewId) {
         ensureReviewExists(reviewId);
+        Review review = readOne(reviewId);
         reviewStorage.delete(reviewId);
+        this.feedService.addEvent(review.getUserId(), Event.EventType.REVIEW, Event.Operation.REMOVE, reviewId);
         log.info("Deleted review id={}", reviewId);
     }
 
