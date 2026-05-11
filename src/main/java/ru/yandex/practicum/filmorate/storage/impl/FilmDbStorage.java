@@ -70,6 +70,24 @@ public class FilmDbStorage implements FilmStorage {
 
     private static final String SELECT_COMMON_FILMS = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " + "f.mpa_id, m.id as mpa_id_from_join, m.name as mpa_name " + "FROM films f " + "LEFT JOIN mpa m ON f.mpa_id = m.id " + "WHERE f.id IN (SELECT film_id FROM film_likes WHERE user_id = ?) " + "AND f.id IN (SELECT film_id FROM film_likes WHERE user_id = ?) " + "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = f.id) DESC, f.id ASC";
 
+    private static final String SELECT_RECOMMENDED_FILMS = "SELECT f.id, f.name, f.description, f.release_date, f.duration, " + "f.mpa_id, m.id as mpa_id_from_join, m.name as mpa_name " + "FROM films f " + "LEFT JOIN mpa m ON f.mpa_id = m.id " + "WHERE f.id IN (" +
+            "SELECT fl_recommend.film_id " +
+            "FROM film_likes fl_recommend " +
+            "WHERE fl_recommend.user_id = (" +
+            "    SELECT other_user_id FROM (" +
+            "        SELECT fl_other.user_id AS other_user_id, COUNT(*) AS common_likes " +
+            "        FROM film_likes fl_self " +
+            "        JOIN film_likes fl_other ON fl_self.film_id = fl_other.film_id " +
+            "        WHERE fl_self.user_id = ? AND fl_other.user_id <> ? " +
+            "        GROUP BY fl_other.user_id " +
+            "        ORDER BY common_likes DESC, other_user_id ASC " +
+            "        LIMIT 1" +
+            "    ) AS best_match" +
+            ") " +
+            "AND fl_recommend.film_id NOT IN (SELECT film_id FROM film_likes WHERE user_id = ?)" +
+            ") " +
+            "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = f.id) DESC, f.id ASC";
+
     private final JdbcTemplate jdbcTemplate;
     private final FilmRowMapper filmRowMapper;
 
@@ -225,6 +243,14 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    public Collection<Film> getRecommendations(long userId) {
+        return this.jdbcTemplate.query(SELECT_RECOMMENDED_FILMS, (rs, rowNum) -> {
+            Film f = this.filmRowMapper.mapRow(rs, rowNum);
+            loadMpaFromResultSet(rs, f);
+            return f;
+        }, userId, userId, userId);
+    }
+
     public Collection<Film> searchFilms(String query, boolean byTitle, boolean byDirector) {
         StringBuilder sql = new StringBuilder(
                 "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +

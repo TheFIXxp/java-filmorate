@@ -30,5 +30,7 @@ public interface FilmStorage {
 
     Collection<Film> getCommonFilms(long userId, long friendId);
 
+    Collection<Film> getRecommendations(long userId);
+
     Collection<Film> searchFilms(String query, boolean byTitle, boolean byDirector);
 }
