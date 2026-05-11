@@ -28,7 +28,7 @@ public class FeedService {
 
         this.feedStorage.addEvent(event);
         log.info("Event added: userId={}, eventType={}, operation={}, entityId={}", userId, eventType, operation,
-                 entityId);
+                entityId);
     }
 
     public Collection<Event> getFeedByUserId(long userId) {

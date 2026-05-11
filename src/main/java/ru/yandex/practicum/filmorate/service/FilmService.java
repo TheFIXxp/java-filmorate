@@ -7,8 +7,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
@@ -152,6 +152,8 @@ public class FilmService {
         Collection<Film> recommendations = this.filmStorage.getRecommendations(userId);
         enrichFilmsWithGenres(recommendations);
         return recommendations;
+    }
+
     public Collection<Film> getFilmsByDirector(Long directorId, String sortBy) {
         directorService.getDirectorById(directorId);
         Collection<Film> films = filmStorage.getFilmsByDirector(directorId, sortBy);

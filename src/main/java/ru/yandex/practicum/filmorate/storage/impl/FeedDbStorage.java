@@ -43,7 +43,7 @@ public class FeedDbStorage implements FeedStorage {
 
         event.setEventId(Objects.requireNonNull(keyHolder.getKey()).longValue());
         log.debug("Event added: eventId={}, userId={}, eventType={}, operation={}",
-                  event.getEventId(), event.getUserId(), event.getEventType(), event.getOperation());
+                event.getEventId(), event.getUserId(), event.getEventType(), event.getOperation());
     }
 
     @Override

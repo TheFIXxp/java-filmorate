@@ -12,6 +12,7 @@ public class Director {
     @Positive
     Long id;
 
-    @NotBlank @NotNull
+    @NotBlank
+    @NotNull
     String name;
 }

@@ -249,7 +249,8 @@ public class FilmDbStorage implements FilmStorage {
             loadMpaFromResultSet(rs, f);
             return f;
         }, userId, userId, userId);
-      
+    }
+
     public Collection<Film> searchFilms(String query, boolean byTitle, boolean byDirector) {
         StringBuilder sql = new StringBuilder(
                 "SELECT f.id, f.name, f.description, f.release_date, f.duration, " +
