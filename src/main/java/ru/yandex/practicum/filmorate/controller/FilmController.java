@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.ValidationException;
 import jakarta.validation.constraints.Positive;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -75,5 +78,31 @@ public class FilmController {
             @RequestParam(defaultValue = "likes") String sortBy
     ) {
         return filmService.getFilmsByDirector(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    public Collection<Film> searchFilms(@RequestParam String query, @RequestParam String by) {
+        Set<String> filters = parseSearchBy(by);
+        boolean byTitle = filters.contains("title");
+        boolean byDirector = filters.contains("director");
+        return filmService.searchFilms(query, byTitle, byDirector);
+    }
+
+    private Set<String> parseSearchBy(String by) {
+        if (by == null || by.isBlank()) {
+            throw new ValidationException("by must contain director and/or title");
+        }
+
+        Set<String> filters = java.util.Arrays.stream(by.split(","))
+                .map(String::trim)
+                .filter(value -> !value.isBlank())
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+
+        if (filters.isEmpty() || !filters.stream().allMatch(value -> value.equals("title") || value.equals("director"))) {
+            throw new ValidationException("by must contain director and/or title");
+        }
+
+        return filters;
     }
 }

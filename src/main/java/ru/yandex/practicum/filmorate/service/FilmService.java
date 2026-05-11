@@ -199,4 +199,18 @@ public class FilmService {
 
         return commonFilms;
     }
+
+    public Collection<Film> searchFilms(String query, boolean byTitle, boolean byDirector) {
+        if (query == null || query.isBlank()) {
+            throw new ValidationException("query must not be blank");
+        }
+        if (!byTitle && !byDirector) {
+            throw new ValidationException("by must contain director and/or title");
+        }
+
+        Collection<Film> films = filmStorage.searchFilms(query, byTitle, byDirector);
+        enrichFilmsWithGenres(films);
+        enrichFilmsWithDirectors(films);
+        return films;
+    }
 }
