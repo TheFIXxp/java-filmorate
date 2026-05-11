@@ -6,8 +6,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FeedService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
@@ -20,6 +22,7 @@ public class UserController {
 
     UserService userService;
     FilmService filmService;
+    FeedService feedService;
 
     @PostMapping
     public User createUser(@Valid @RequestBody User user) {
@@ -34,6 +37,11 @@ public class UserController {
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
         return this.userService.updateUser(user);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteUser(@PathVariable long id) {
+        userService.deleteUser(id);
     }
 
     @GetMapping("/{id}")
@@ -64,5 +72,10 @@ public class UserController {
     @GetMapping("/{id}/friends/common/{otherId}")
     public Collection<User> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
         return this.userService.getCommonFriends(id, otherId);
+    }
+
+    @GetMapping("/{id}/feed")
+    public Collection<Event> getFeed(@PathVariable long id) {
+        return this.feedService.getFeedByUserId(id);
     }
 }

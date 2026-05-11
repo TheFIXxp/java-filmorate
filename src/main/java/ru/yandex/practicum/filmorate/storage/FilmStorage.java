@@ -10,6 +10,8 @@ public interface FilmStorage {
 
     Film updateFilm(Film film);
 
+    void deleteFilm(long id);
+
     Optional<Film> getFilmById(long filmId);
 
     Collection<Film> getFilms();
@@ -22,7 +24,13 @@ public interface FilmStorage {
 
     Collection<Film> getPopularFilms(int count);
 
+    Collection<Film> getFilmsByDirector(long directorId, String sortBy);
+
+    Collection<Film> getPopularFilms(int count, Integer genreId, Integer year);
+
     Collection<Film> getCommonFilms(long userId, long friendId);
 
     Collection<Film> getRecommendations(long userId);
+  
+    Collection<Film> searchFilms(String query, boolean byTitle, boolean byDirector);
 }

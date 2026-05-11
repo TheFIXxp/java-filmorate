@@ -14,7 +14,7 @@ import java.util.Set;
  */
 @Data
 public class Film {
-    long id;
+    Long id;
     @NotBlank
     String name;
     @Length(max = 200)
@@ -22,7 +22,8 @@ public class Film {
     @NotNull
     LocalDate releaseDate;
     @Positive
-    int duration;
+    Integer duration;
     Mpa mpa;
     Set<Genre> genres;
+    Set<Director> directors;
 }

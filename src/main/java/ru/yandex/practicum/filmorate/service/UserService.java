@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -19,6 +20,7 @@ import java.util.Collection;
 public class UserService {
 
     final UserStorage userStorage;
+    final FeedService feedService;
 
     public User addUser(User user) {
         applyDefaultName(user);
@@ -57,6 +59,7 @@ public class UserService {
         ensureUserExists(userId);
         ensureUserExists(friendId);
         this.userStorage.addFriend(userId, friendId);
+        this.feedService.addEvent(userId, Event.EventType.FRIEND, Event.Operation.ADD, friendId);
         log.info("Friend added: userId={}, friendId={}", userId, friendId);
     }
 
@@ -65,6 +68,7 @@ public class UserService {
         ensureUserExists(userId);
         ensureUserExists(friendId);
         this.userStorage.removeFriend(userId, friendId);
+        this.feedService.addEvent(userId, Event.EventType.FRIEND, Event.Operation.REMOVE, friendId);
         log.info("Friend removed: userId={}, friendId={}", userId, friendId);
     }
 
@@ -92,5 +96,11 @@ public class UserService {
         if (userId == otherId) {
             throw new ValidationException("userId и otherId должны ссылаться на разных пользователей");
         }
+    }
+
+    public void deleteUser(long id) {
+        ensureUserExists(id);
+        userStorage.deleteUser(id);
+        log.info("User deleted: id={}", id);
     }
 }
