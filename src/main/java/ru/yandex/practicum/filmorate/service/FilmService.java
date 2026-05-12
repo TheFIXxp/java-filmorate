@@ -45,6 +45,8 @@ public class FilmService {
         validateMpa(film);
         validateGenres(film);
         Film stored = this.filmStorage.addFilm(film);
+        enrichFilmsWithGenres(List.of(stored));
+        enrichFilmsWithDirectors(List.of(stored));
         log.info("Film added: id={}, name={}", stored.getId(), stored.getName());
         return stored;
     }
@@ -55,8 +57,10 @@ public class FilmService {
         validateMpa(film);
         validateGenres(film);
         Film stored = this.filmStorage.updateFilm(film);
+        enrichFilmsWithGenres(List.of(stored));
+        enrichFilmsWithDirectors(List.of(stored));
         log.info("Film updated: id={}, name={}", stored.getId(), stored.getName());
-        return film;
+        return stored;
     }
 
     public void deleteFilm(long id) {
@@ -97,6 +101,7 @@ public class FilmService {
         log.info("Get all films");
         Collection<Film> films = this.filmStorage.getFilms();
         enrichFilmsWithGenres(films);
+        enrichFilmsWithDirectors(films);
         return films;
     }
 
@@ -143,6 +148,7 @@ public class FilmService {
         log.info("Get popular films: count={}", count);
         Collection<Film> films = this.filmStorage.getPopularFilms(count);
         enrichFilmsWithGenres(films);
+        enrichFilmsWithDirectors(films);
         return films;
     }
 
@@ -151,6 +157,7 @@ public class FilmService {
         log.info("Get film recommendations: userId={}", userId);
         Collection<Film> recommendations = this.filmStorage.getRecommendations(userId);
         enrichFilmsWithGenres(recommendations);
+        enrichFilmsWithDirectors(recommendations);
         return recommendations;
     }
 
@@ -168,6 +175,7 @@ public class FilmService {
         if (genreId != null || year != null) count = 10_000;
         Collection<Film> films = this.filmStorage.getPopularFilms(count, genreId, year);
         enrichFilmsWithGenres(films);
+        enrichFilmsWithDirectors(films);
         return films;
     }
 
