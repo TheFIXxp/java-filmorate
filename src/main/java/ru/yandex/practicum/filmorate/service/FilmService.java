@@ -173,7 +173,8 @@ public class FilmService {
 
     public Collection<Film> getPopular(int count, Integer genreId, Integer year) {
         log.info("Get popular films: count={}, genreId={}, year={}", count, genreId, year);
-        if (genreId != null || year != null) count = 10_000;
+        if ((genreId != null && genreStorage.getGenreById(genreId).isPresent()) || (year != null && year >= 1895))
+            count = 10_000;
         Collection<Film> films = this.filmStorage.getPopularFilms(count, genreId, year);
         enrichFilmsWithGenres(films);
         enrichFilmsWithDirectors(films);
