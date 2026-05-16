@@ -66,6 +66,7 @@ public class FilmService {
     public void deleteFilm(long id) {
         ensureFilmExists(id);
         filmStorage.deleteFilm(id);
+        log.info("Film with id={} deleted", id);
     }
 
     private void validateDate(Film film) {
@@ -204,6 +205,8 @@ public class FilmService {
     }
 
     public Collection<Film> getCommon(long userId, long friendId) {
+        if (userId == friendId) throw new IllegalArgumentException("userId = friendId");
+
         ensureUserExists(userId);
         ensureUserExists(friendId);
 
@@ -219,9 +222,6 @@ public class FilmService {
     public Collection<Film> searchFilms(String query, boolean byTitle, boolean byDirector) {
         if (query == null || query.isBlank()) {
             throw new ValidationException("query must not be blank");
-        }
-        if (!byTitle && !byDirector) {
-            throw new ValidationException("by must contain director and/or title");
         }
 
         Collection<Film> films = filmStorage.searchFilms(query, byTitle, byDirector);

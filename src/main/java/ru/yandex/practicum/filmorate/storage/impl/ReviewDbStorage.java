@@ -39,7 +39,6 @@ public class ReviewDbStorage implements ReviewStorage {
         }, keyHolder);
         long id = Objects.requireNonNull(keyHolder.getKey()).longValue();
         review.setReviewId(id);
-        review.setUseful(0);
         log.debug("Created review with id {}", id);
         return review;
     }
@@ -50,7 +49,7 @@ public class ReviewDbStorage implements ReviewStorage {
         jdbcTemplate.update(sql, review.getContent(), review.getIsPositive(), review.getReviewId());
         log.debug("Updated review id {}", review.getReviewId());
 
-        return findById(review.getReviewId()).orElseThrow(() -> new RuntimeException("Review not found after update"));
+        return review;
     }
 
     @Override

@@ -78,7 +78,9 @@ CREATE TABLE IF NOT EXISTS reviews
     is_positive BOOLEAN       NOT NULL,
     user_id     BIGINT        NOT NULL,
     film_id     BIGINT        NOT NULL,
-    useful      INT DEFAULT 0
+    useful      INT DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (film_id) REFERENCES films (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS review_ratings
